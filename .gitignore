@@ -1,0 +1,7 @@
+# Artifacts
+__pycache__
+*.DS_Store
+poetry.lock
+
+CLAUDE.md
+STATUS.md

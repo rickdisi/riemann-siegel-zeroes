@@ -1,0 +1,18 @@
+[project]
+name = "riemann-siegel-zeroes"
+version = "0.1.0"
+description = "Riemann-Siegel zeta zero finder: C++ algorithm, Python plotting/verification"
+authors = [
+    {name = "Riccardo di Silvio"}
+]
+readme = "README.md"
+requires-python = "^3.12"
+dependencies = [
+    "numpy (>=2.5.3,<3.0.0)",
+    "matplotlib (>=3.11.2,<4.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
