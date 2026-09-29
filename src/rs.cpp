@@ -30,9 +30,9 @@ double zMain(double t) {
         double term = std::cos(theta(t) - t * std::log(n)) / std::sqrt(n); // Summation term
         sum += term;
     }
-    double total = 2.0 * sum;
+    double mainTerm = 2.0 * sum;
 
-    return total;
+    return mainTerm;
 }
 
 // First Riemann-Siegel correction term.
@@ -40,25 +40,55 @@ double zMain(double t) {
 // c0(p) = cos(2*pi*(p^2 - p - 1/16)) / cos(2*pi*p)
 double c0(double p) {
 
-    double result = std::cos(2.0 * pi * (p * p - p - (1.0 / 16.0))) / std::cos(2 * pi * p);
+    double c0Coeff = std::cos(2.0 * pi * (p * p - p - (1.0 / 16.0))) / std::cos(2 * pi * p);
 
-    return result;
+    return c0Coeff;
 }
 
-// Full Z(t): main sum plus the first correction term.
-// Z(t) = zMain(t) + (-1)^(N-1) * (2*pi/t)^(1/4) * c0(p)
-// N and p are computed the same way as in zMain.
+// Second Riemann-Siegel correction term.
+// p is the same fractional leftover as in c0.
+// C1 is the third derivative of F(z), scaled by a constant: C1(z) = F'''(z) / (12*pi^2).
+double c1(double p) {
+
+    double zSubst = 1 - 2 * p;
+    double g = (pi / 2.0) * (zSubst * zSubst + 3.0/4.0);
+
+    double c1Coeff = ( 
+        zSubst * (pi * zSubst * zSubst * std::sin(g) - 3 * std::cos(g)) 
+        * std::cos(pi * zSubst) * std::cos(pi * zSubst) * std::cos(pi * zSubst)
+        - 3 * pi * zSubst * (std::sin(pi * zSubst) * std::sin(pi * zSubst) + 1)
+        * std::sin(g) * std::cos(pi * zSubst)
+        - 3 * (pi * zSubst * zSubst * std::cos(g) + std::sin(g)) 
+        * std::sin(pi * zSubst) * std::cos(pi * zSubst) * std::cos(pi * zSubst)
+        + pi * (std::sin(pi * zSubst) * std::sin(pi * zSubst) + 5) 
+        * std::sin(pi * zSubst) * std::cos(g)
+    )
+        / (
+            12.0 * std::cos(pi * zSubst) * std::cos(pi * zSubst) * std::cos(pi * zSubst) * std::cos(pi * zSubst)
+        );
+    
+    return c1Coeff;
+}
+
+// Full Z(t): main sum plus the correction terms.
+// Z(t) = zMain(t) + (-1)^(N-1) * (2*pi/t)^(1/4) * [c0(p) + c1(p)*(2*pi/t)^(1/2)]
+// N and p are computed the same way as in zMain. Each further correction
+// term (c2, c3, c4) would carry one more power of (2*pi/t)^(1/2) inside
+// the brackets.
 double z(double t) {
 
     long N = std::floor(std::sqrt(t / (2.0 * pi))); // std::floor is technically redundant but kept for clarity
     double p = std::sqrt(t / (2.0 * pi)) - N;
 
     double sign = ((N - 1) % 2 == 0) ? 1.0 : -1.0; // Shorthand for if (N-1) even, then sign==+1, if odd then -1.
-    double result = zMain(t) + sign * (std::pow((2.0 * pi) / t, 1.0/4.0)) * c0(p); // replaced std::pow(-1, N-1) with cheaper "sign" variable.
+    
+    double result = 
+        zMain(t) 
+        + sign * (std::pow((2.0 * pi) / t, 1.0/4.0)) // replaced std::pow(-1, N-1) with cheaper "sign" variable.
+        * (c0(p) + (c1(p) * std::sqrt(2.0 * pi / t))); 
 
     return result;
 }
-
 
 int main() {
     // Tests written by Claude
