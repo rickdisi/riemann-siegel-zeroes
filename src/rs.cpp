@@ -1,5 +1,7 @@
 #include <cmath>
 #include <cstdio>
+#include <fstream>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -180,8 +182,32 @@ std::vector<std::pair<double, double>> findSignChanges(double tMin, double tMax,
     return brackets;
 }
 
+// Refines a bracket [a, b] (where z(a) and z(b) have opposite signs) down to
+// a precise root via bisection. Each iteration halves the bracket.
+double bisect(double a, double b, int iterations) {
+
+    double za = z(a);
+
+    for (int i = 0; i < iterations; ++i) {
+        double m = (a + b) / 2.0;
+        double zm = z(m);
+
+        if (za * zm < 0.0) {
+            b = m;
+        }
+        else {
+            a = m;
+            za = zm;
+        }
+        
+    }
+    return (a + b) / 2.0;
+}
+
+
 int main() {
     // Tests written by Claude
+    
     // Sanity check: g0 = 17.8455995405 is the first Gram point, defined by
     // theta(g0) = 0 (confirmed against Wikipedia's Gram point article).
     double g0 = 17.8455995405;
@@ -232,6 +258,19 @@ int main() {
     std::printf("found %zu sign-change brackets:\n", brackets.size());
     for (auto& bracket : brackets) {
         std::printf("  (%.2f, %.2f)\n", bracket.first, bracket.second);
+    }
+
+    // Verification: refine the first 10 brackets with bisect() and compare
+    // against the published first 10 zeros, to 8 decimal places.
+    double knownZeros[10] = {
+        14.134725142, 21.022039639, 25.010857580, 30.424876126, 32.935061588,
+        37.586178159, 40.918719012, 43.327073281, 48.005150881, 49.773832478
+    };
+    std::printf("\nrefined zeros vs known values:\n");
+    for (int i = 0; i < 10; ++i) {
+        double refined = bisect(brackets[i].first, brackets[i].second, 50);
+        double error = refined - knownZeros[i];
+        std::printf("  zero %d: refined=%.9f  known=%.9f  error=%.2e\n", i + 1, refined, knownZeros[i], error);
     }
 
     return 0;
