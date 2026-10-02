@@ -1,5 +1,7 @@
 #include <cmath>
 #include <cstdio>
+#include <utility>
+#include <vector>
 
 constexpr double pi = 3.14159265358979323846;
 
@@ -154,6 +156,30 @@ double z(double t) {
     return result;
 }
 
+// Scans z(t) from tMin to tMax in steps of `step` and returns every bracket
+// (t, t+step) where z(t) changes sign.
+std::vector<std::pair<double, double>> findSignChanges(double tMin, double tMax, double step) {
+    
+    std::vector<std::pair<double, double>> brackets;
+
+    double tPrev = tMin;
+    double zPrev = z(tPrev);
+
+    while (tPrev < tMax) {
+        double tNew = tPrev + step;
+        double zNew = z(tNew);
+
+        if (zPrev * zNew < 0.0) {
+            brackets.push_back({tPrev, tNew});
+        }
+
+        tPrev = tNew;
+        zPrev = zNew;
+    }
+    
+    return brackets;
+}
+
 int main() {
     // Tests written by Claude
     // Sanity check: g0 = 17.8455995405 is the first Gram point, defined by
@@ -196,6 +222,16 @@ int main() {
         std::printf("sign change detected in narrow bracket -> c0 correction improved the location\n");
     } else {
         std::printf("no sign change in narrow bracket -> check c0/z\n");
+    }
+
+    // Sanity check: scanning t=10..55 with step=0.1 should find exactly 10
+    // sign-change brackets, one per known zero: 14.134725, 21.022040,
+    // 25.010858, 30.424876, 32.935062, 37.586178, 40.918719, 43.327073,
+    // 48.005151, 49.773832.
+    auto brackets = findSignChanges(10.0, 55.0, 0.1);
+    std::printf("found %zu sign-change brackets:\n", brackets.size());
+    for (auto& bracket : brackets) {
+        std::printf("  (%.2f, %.2f)\n", bracket.first, bracket.second);
     }
 
     return 0;
