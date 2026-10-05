@@ -68,5 +68,15 @@ int main() {
         std::printf("  zero %d: refined=%.9f  known=%.9f  error=%.2e\n", i + 1, refined, knownZeros[i], error);
     }
 
+    // Find the first n where Gram's Law actually fails, since n=0..10 (above)
+    // all satisfied it -- we need a real violation to design the Gram-block
+    // handling against, rather than guessing a literature value from memory.
+    std::printf("\nscanning for the first Gram's Law violation:\n");
+    int n = 0;
+    while (satisfiesGramLaw(n)) {
+        ++n;
+    }
+    std::printf("  first violation at n=%d (g_n=%.6f)\n", n, gram(n));
+
     return 0;
 }
