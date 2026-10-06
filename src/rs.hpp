@@ -1,9 +1,6 @@
 #pragma once
 
 #include <cmath>
-#include <cstdio>
-#include <fstream>
-#include <string>
 #include <utility>
 #include <vector>
 
@@ -128,50 +125,4 @@ inline double estimateTMax(int targetCount) {
     T = T * 1.1;
 
     return T;
-}
-
-// Finds the n-th Gram point g_n: the t where theta(t) = n * pi
-// Scoped to n >= 0.
-inline double gram(int n) {
-    double target = n * pi;
-
-    // Stage 1: doubling search for a bracket, same shape as estimateTMax
-    double t = 10.0;
-    while (theta(t) < target) {
-        t = t * 2.0;
-    }
-    double a = t / 2.0; // the previous t, before the last doubling
-    double b = t; // the t that first satisfied the condition
-
-    // Stage 2: bisection, same shape as bisect(). Comparing theta(x) - target instead of z(x)
-    double fa = theta(a) - target;
-
-    for (int i = 0; i < 50; ++i) {
-        double m = (a + b) / 2.0;
-        double fm = theta(m) - target;
-
-        if (fa * fm < 0.0) {
-            b = m;
-        } else {
-            a = m;
-            fa = fm;
-        }
-    }
-
-    return (a + b) / 2.0;
-}
-
-// Checks Gram's Law at n: whether (-1)^n * Z(g_n) > 0, i.e. z(gram(n))
-// alternates sign as n increases by one. True at most n.
-// A false return needs Gram-block handling rather than the one zero per interval assumption
-inline bool satisfiesGramLaw(int n) {
-
-    double zg = z(gram(n));
-    double sign = (n % 2 == 0) ? 1.0 : -1.0; // Shorthand for if n even, then sign == +1, if odd then -1.
-
-    if (sign * zg > 0.0) {
-        return true;
-    }
-
-    return false;
 }
