@@ -1,8 +1,10 @@
 #include <cstdio>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 #include "rs.hpp"
+#include "turing.hpp"
 #include "csv_export.hpp"
 
 
@@ -12,7 +14,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // Fixed at 10.0: safely inside theta(t)'s valid range, and comfortably
+    // Fixed at 10.0: safely inside theta(t)'s valid range and comfortably
     // below the first real zero (14.134725...), so the scan always starts
     // before it and can bracket it correctly.
     double tMin = 10.0;
@@ -35,6 +37,25 @@ int main(int argc, char* argv[]) {
     }
 
     writeZerosCSV("data/zeros.csv", zeros);
+
+    int mCert = firstCertifiableIndex();
+    int nEnd = nextGoodIndex(targetCount - 1);
+    int nEmpiricalEnd = std::min(mCert, nEnd); // smallest of the two
+
+    auto failedBlocks = verifyAllGramBlocks(0, nEmpiricalEnd, step);
+
+    std::printf("empirical Gram-block check on n=0.. %d: %zu blocks failed\n", nEmpiricalEnd, failedBlocks.size());
+
+    if (nEnd > mCert) {
+        int k = nEnd - mCert;
+        int kMax = 40; // Chosen to be 40.
+        bool proven = proveCompleteSpan(mCert, k, kMax, step);
+        
+        std::printf("Turing certification on n=%d...%d: %s\n", mCert, nEnd, proven ? "proven" : "NOT proven");
+    } 
+    else {
+        std::printf("All requested zeroes are below Turing's minimum threshold, none certified\n");
+    }
 
     std::printf("found %zu zeros (target %d, scanned up to t=%.2f), written to data/zeros.csv\n",
                 zeros.size(), targetCount, tMax);

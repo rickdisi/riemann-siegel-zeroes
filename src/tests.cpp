@@ -123,5 +123,13 @@ int main() {
     std::printf("  m=300 k=0 kMax=20: %d (expected 0, k < 1)\n", proveCompleteSpan(300, 0, 20, 0.01));
     std::printf("  m=300 k=4 kMax=2: %d (expected 0, kMax too small)\n", proveCompleteSpan(300, 4, 2, 0.01));
 
+    // Index helpers used by main: first n with g_n > 168*pi and Gram's Law
+    // satisfied (n=288 is just below the threshold and bad), and the next
+    // good Gram point at or after a given index (n=367 is bad).
+    std::printf("\nindex helpers:\n");
+    std::printf("  firstCertifiableIndex: %d (expected 289)\n", firstCertifiableIndex());
+    std::printf("  nextGoodIndex(367): %d (expected 368)\n", nextGoodIndex(367));
+    std::printf("  nextGoodIndex(300): %d (expected 300)\n", nextGoodIndex(300));
+
     return 0;
 }

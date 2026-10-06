@@ -138,3 +138,24 @@ inline bool proveCompleteSpan(int m, int k, int kMax, double step) {
     // scan
     return crossCheckSpan(m, k, step);
 }
+
+// Smallest n with gram(n) > turingTMin and satisfiesGramLaw(n).
+inline int firstCertifiableIndex() {
+    int n = 0;
+    while (!satisfiesGramLaw(n) || gram(n) <= turingTMin) {
+        ++n;
+    }
+
+    return n;
+}
+
+// Smallest n >= nMin with satisfiesGramLaw(n): a good Gram point to end a span on.
+inline int nextGoodIndex(int nMin) {
+
+    int n = nMin;
+    while (!satisfiesGramLaw(n)) {
+        ++n;
+    }
+
+    return n;
+}
