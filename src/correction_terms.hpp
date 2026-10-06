@@ -5,6 +5,20 @@
 
 constexpr double pi = 3.14159265358979323846;
 
+// Taylor coefficients of C1(z) expanded around z = -0.5.
+const std::vector<double> c1TaylorCoeffs = {
+    - 0.010416666667,
+    0.003510473973,
+    0.074180889406,
+    - 0.126319511253,
+    0.122624182326,
+    - 0.053783813433,
+    - 0.020927470267,
+    0.048901792109,
+    - 0.042419263336,
+    0.018941888162,
+};
+
 // Taylor coefficients of C2(z) expanded around z = -0.5.
 const std::vector<double> c2TaylorCoeffs = {
     0.004612789401,
@@ -43,10 +57,10 @@ inline double c0(double p) {
     return c0Coeff;
 }
 
-// Second Riemann-Siegel correction term.
-// p is the same fractional leftover as in c0.
-// C1 is the third derivative of F(z), scaled by a constant: C1(z) = F'''(z) / (12*pi^2).
-inline double c1(double p) {
+// Closed form evaluation of C1(z): F'''(z) / (12*pi^2).
+// p is the same fractional leftover as in c0. Unstable near z = 0.5
+// Use the Taylor expansion (c1TaylorCoeffs) close to z = ±0.5.
+inline double c1Direct(double p) {
 
     double zSubst = 1.0 - 2.0 * p;
     double g = (pi / 2.0) * (zSubst * zSubst + 3.0 / 4.0);
@@ -71,8 +85,30 @@ inline double c1(double p) {
     return c1Coeff;
 }
 
+// First/second Riemann-Siegel correction term (C1). p is the same
+// fractional leftover as in c0. Dispatches to the Taylor expansion
+// (c1TaylorCoeffs) within 0.001 of the singular points z = ±0.5, and to
+// the direct closed form (c1Direct) otherwise.
+inline double c1(double p) {
+
+    double zSubst = 1.0 - 2.0 * p;
+    double result;
+
+    if (- 0.5 - 0.001 <= zSubst && zSubst <= - 0.5 + 0.001) {
+        result = evalTaylorSeries(c1TaylorCoeffs, -0.5, zSubst);
+    }
+    else if (0.5 - 0.001 <= zSubst && zSubst <= 0.5 + 0.001) {
+        result = - evalTaylorSeries(c1TaylorCoeffs, - 0.5, -zSubst);
+    }
+    else {
+        result = c1Direct(p);
+    }
+
+    return result;
+}
+
 // Closed form evaluation of C2(z): d_2,0 * F^(6)(z)/pi^4 + d_2,1 * F''(z)/pi^2.
-// Unstable near z=±0.5. Use c2Taylor close to z=±0.5.
+// Unstable near z = ±0.5. Use c2Taylor close to z = ±0.5.
 inline double c2Direct(double p) {
 
     double zSubst = 1.0 - 2.0 * p;
