@@ -1,4 +1,6 @@
 #include "rs.hpp"
+#include "gram.hpp"
+#include "turing.hpp"
 
 int main() {
     // Tests written by Claude
@@ -77,6 +79,49 @@ int main() {
         ++n;
     }
     std::printf("  first violation at n=%d (g_n=%.6f)\n", n, gram(n));
+
+    // findGramOffset: for the first few bad Gram points above 168*pi (where
+    // Turing's bound is valid), sign * z(g_j + h) must be positive. A good
+    // Gram point must return exactly 0.0.
+    std::printf("\nfindGramOffset on bad Gram points above 168*pi:\n");
+    int shown = 0;
+    for (int j = 290; j < 600 && shown < 4; ++j) {
+        if (!satisfiesGramLaw(j)) {
+            double h = findGramOffset(j, 0.01);
+            double sign = (j % 2 == 0) ? 1.0 : -1.0;
+            std::printf("  n=%d g_n=%.4f h=%+.2f sign*z(g_n+h)=%.4f\n", j, gram(j), h, sign * z(gram(j) + h));
+            ++shown;
+        }
+    }
+    std::printf("  good point n=300: h=%.1f (expected 0.0)\n", findGramOffset(300, 0.01));
+
+    // proveSpan: true needs both endpoints good, g_m > 168*pi, and the Turing
+    // bound < 2. At m=300 the bound with no bad points is 2.0204 for k=2, 1.68 for k=3.
+    std::printf("\nproveSpan:\n");
+    std::printf("  m=300 k=3: %d (expected 1)\n", proveSpan(300, 3, 0.01));
+    std::printf("  m=300 k=2: %d (expected 0, bound 2.0204 >= 2)\n", proveSpan(300, 2, 0.01));
+    std::printf("  m=365 k=3: %d (expected 1, bad point n=367 inside)\n", proveSpan(365, 3, 0.01));
+    std::printf("  m=365 k=2: %d (expected 0, endpoint n=367 violates Gram's Law)\n", proveSpan(365, 2, 0.01));
+    std::printf("  m=125 k=2: %d (expected 0, g_125 below 168*pi)\n", proveSpan(125, 2, 0.01));
+
+    // findProvableSpan: smallest k in [1, kMax] that proveSpan accepts, else -1.
+    std::printf("\nfindProvableSpan:\n");
+    std::printf("  m=300 kMax=20: %d (expected 3)\n", findProvableSpan(300, 20, 0.01));
+    std::printf("  m=365 kMax=20: %d (expected 3)\n", findProvableSpan(365, 20, 0.01));
+    std::printf("  m=366 kMax=20: %d (expected 3, k=1 endpoint n=367 is bad)\n", findProvableSpan(366, 20, 0.01));
+    std::printf("  m=125 kMax=20: %d (expected -1, below 168*pi)\n", findProvableSpan(125, 20, 0.01));
+    std::printf("  m=300 kMax=3: %d (expected 3, kMax itself is tried)\n", findProvableSpan(300, 3, 0.01));
+    std::printf("  m=300 kMax=2: %d (expected -1)\n", findProvableSpan(300, 2, 0.01));
+
+    // proveCompleteSpan: both endpoints proven via findProvableSpan, then the
+    // scan must find exactly k sign changes in between.
+    std::printf("\nproveCompleteSpan:\n");
+    std::printf("  m=300 k=4 kMax=20: %d (expected 1)\n", proveCompleteSpan(300, 4, 20, 0.01));
+    std::printf("  m=365 k=2 kMax=20: %d (expected 0, endpoint n=367 is bad)\n", proveCompleteSpan(365, 2, 20, 0.01));
+    std::printf("  m=125 k=2 kMax=20: %d (expected 0, below 168*pi)\n", proveCompleteSpan(125, 2, 20, 0.01));
+    std::printf("  m=300 k=30 kMax=40: %d (expected 1, 30 zeros proven complete)\n", proveCompleteSpan(300, 30, 40, 0.01));
+    std::printf("  m=300 k=0 kMax=20: %d (expected 0, k < 1)\n", proveCompleteSpan(300, 0, 20, 0.01));
+    std::printf("  m=300 k=4 kMax=2: %d (expected 0, kMax too small)\n", proveCompleteSpan(300, 4, 2, 0.01));
 
     return 0;
 }
