@@ -103,3 +103,25 @@ inline std::vector<std::pair<int, int>> verifyAllGramBlocks(int nMin, int nMax, 
 
     return failedBlocks;
 }
+
+// Scans [g_nStart, g_nEnd]. Expects nEnd - nStart brackets. If the count at `step`
+// is wrong, rescans at step/10, up to maxLevels times. Returns false if no level matches.
+inline bool scanBlock(int nStart, int nEnd, double step, int maxLevels, std::vector<std::pair<double, double>>& out) {
+
+    double tLower = gram(nStart);
+    double tUpper = gram(nEnd);
+    double currentStep = step;
+
+    for (int level = 0; level <= maxLevels; ++level) {
+        auto brackets = findSignChanges(tLower, tUpper, currentStep);
+
+        if (brackets.size() == static_cast<size_t>(nEnd - nStart)) {
+            out.insert(out.end(), brackets.begin(), brackets.end());
+            return true;
+        }
+
+        currentStep = currentStep / 10.0;
+    }
+
+    return false;
+}

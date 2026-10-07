@@ -3,6 +3,7 @@
 #include <cmath>
 #include <utility>
 #include <vector>
+#include <algorithm>
 
 #include "correction_terms.hpp"
 
@@ -70,7 +71,7 @@ inline std::vector<std::pair<double, double>> findSignChanges(double tMin, doubl
     double zPrev = z(tPrev);
 
     while (tPrev < tMax) {
-        double tNew = tPrev + step;
+        double tNew = std::min(tPrev + step, tMax);
         double zNew = z(tNew);
 
         if (zPrev * zNew < 0.0) {
