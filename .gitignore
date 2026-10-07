@@ -2,5 +2,11 @@
 __pycache__
 *.DS_Store
 
+# Build output
+build/
+
+# Zeros file
+data/zeros.csv
+
 CLAUDE.md
 STATUS.md
