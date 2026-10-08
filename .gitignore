@@ -6,8 +6,7 @@ __pycache__
 build/
 
 # Zeros file
-data/zeros.csv
-data/term_errors.csv
+data/*
 
 CLAUDE.md
 STATUS.md

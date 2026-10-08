@@ -8,9 +8,9 @@ HEADERS = $(wildcard src/*.hpp)
 #   make run N=100
 N = 20
 
-.PHONY: all run test counts errors timing results clean
+.PHONY: all run test counts errors timing results plots clean
 
-all: build/main build/tests build/counts build/errors
+all: build/main build/tests build/counts build/errors build/zcurve
 
 build/main: src/main.cpp $(HEADERS)
 	@mkdir -p build
@@ -27,6 +27,10 @@ build/counts: src/verify/counts.cpp $(HEADERS)
 build/errors: src/verify/errors.cpp $(HEADERS)
 	@mkdir -p build
 	$(CXX) $(CXXFLAGS) src/verify/errors.cpp -o $@
+
+build/zcurve: src/verify/zcurve.cpp $(HEADERS)
+	@mkdir -p build
+	$(CXX) $(CXXFLAGS) src/verify/zcurve.cpp -o $@
 
 # Find the first N zeros and write them to data/zeros.csv (overwrites it).
 run: build/main
@@ -48,7 +52,7 @@ counts: build/main build/counts
 errors: build/errors
 	@mkdir -p data
 	./build/errors
-	poetry run python plot/term_errors.py
+	poetry run python plots/term_errors.py
 
 # Wall-clock time of `./build/main N` for N = 10^3 .. 10^P, run in build/verify/ so data/zeros.csv
 # is never touched. Override: make timing P=6 (about 4 minutes more).
@@ -70,6 +74,15 @@ results: all
 	@echo
 	@echo "== Timing, 10^3 to 10^6 zeros (a failed check in main stops the run)"
 	@$(MAKE) --no-print-directory timing P=6
+
+# The figures, as PDF and PNG in figures/. Needs `poetry install` and data/zeros.csv from
+# `make run N=1000000` (read, never written). Writes data/z_curve.csv, data/term_errors.csv and
+# data/term_errors_summary.csv.
+plots: build/zcurve build/errors
+	@mkdir -p data figures
+	./build/zcurve
+	@$(MAKE) --no-print-directory errors > /dev/null
+	poetry run python plots/plot.py
 
 clean:
 	rm -rf build

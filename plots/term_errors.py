@@ -1,8 +1,9 @@
 """
+Written by Claude
 Error of Z(t) against the number of Riemann-Siegel correction terms.
 
 Reads data/term_errors.csv (written by src/verify/errors.cpp), evaluates the reference
-Z(t) with mpmath at 25 digits, and prints the maximum error over p at each
+Z(t) with mpmath at 25 digits, writes data/term_errors_summary.csv and prints the maximum error over p at each
 height for C0 only, C0..C1 and C0..C2, plus the fitted log-log slope.
 
 The first omitted term is C_{K+1}(p) (2 pi / t)^(1/4 + (K+1)/2), so the error
@@ -45,6 +46,12 @@ for n in ns:
     print(f"{n:>5} {height[n]:>12.1f} {worst[n][1]:>12.3e} {worst[n][2]:>12.3e} {worst[n][3]:>12.3e}")
 
 print()
+# Per-height maximum errors, for plots/plot.py
+with open("data/term_errors_summary.csv", "w") as f:
+    f.write("N,t,c0,c01,c012\n")
+    for n in ns:
+        f.write(f"{n},{height[n]!r},{worst[n][1]!r},{worst[n][2]!r},{worst[n][3]!r}\n")
+
 for k, label in ((1, "C0 only"), (2, "C0..C1"), (3, "C0..C2")):
     used = [n for n in ns if worst[n][k] > FLOOR]
     x = np.log([height[n] for n in used])
