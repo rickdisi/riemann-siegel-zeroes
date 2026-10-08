@@ -28,10 +28,11 @@ inline double theta(double t) {
 inline double zMain(double t) {
 
     long N = std::floor(std::sqrt(t / (2.0 * pi))); // std::floor is technically redundant but kept for clarity
+    double thetaT = theta(t);
 
     double sum = 0.0;
     for (int n = 1; n <= N; ++n) {
-        double term = std::cos(theta(t) - t * std::log(n)) / std::sqrt(n); // Summation term
+        double term = std::cos(thetaT - t * std::log(n)) / std::sqrt(n); // Summation term
         sum += term;
     }
     double mainTerm = 2.0 * sum;
