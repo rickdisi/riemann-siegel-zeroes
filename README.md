@@ -13,10 +13,14 @@ make                      # builds build/main and build/tests
 make run                  # first 20 zeros
 make run N=400            # first 400 zeros
 make test                 # sanity-check suite
+make counts               # zero counts against Riemann-von Mangoldt (generates its own 200,000 zeros, ~30 s)
+make errors               # error against number of correction terms, vs mpmath (needs: poetry install)
+make timing               # wall-clock time of ./build/main for 10^3..10^5 zeros (P=6 adds 10^6, ~4 min)
+make results              # every headline number: first-10 errors, counts, correction-term errors, timing (~5 min)
 make clean
 ```
 
-`make run` calls `./build/main <targetCount>` and **overwrites `data/zeros.csv`**, but only if every check passes; on any failure `main` prints the reason and exits non-zero without writing it. `data/zeros.csv` is tracked in git, so `git checkout data/zeros.csv` restores the committed copy.
+Only `make run` writes `data/zeros.csv`; `make counts`, `make timing` and `make results` run `main` in `build/verify/` and leave it alone. `make run` calls `./build/main <targetCount>` and **overwrites `data/zeros.csv`**, but only if every check passes; on any failure `main` prints the reason and exits non-zero without writing it. `data/zeros.csv` is generated and git-ignored, so each run replaces it and nothing in git holds a previous version.
 
 The scan step is a constant in `src/main.cpp` (`baseStep = 0.01`), not a command-line argument. Zeros are located block by block between consecutive good Gram points. If a block's bracket count differs from the number of zeros it must hold (for example, two zeros closer together than the step give no sign change), the block is rescanned at a step ten times smaller, down to 10^-6, and `main` fails if no step matches.
 
@@ -38,7 +42,7 @@ What it means:
 - If every requested zero is below the Turing threshold, the report says so and nothing is certified.
 - On any failure (a block that cannot be matched, an endpoint that cannot be proven, or a count that differs from the proven one), `main` prints the reason to stderr and exits non-zero without writing the CSV.
 
-Measured on one core (`-O2`): 1,000,000 zeros ran in 263s and was proven; the CSV had 1,000,000 consecutive rows with the last at t = 600269.677012. A first version with a fixed 0.01 scan reported NOT proven at this size because it missed a close pair of zeros near t = 273193.66 (gap 0.0057); the rescan fixes that.
+Measured on one core (`-O2`, `make timing P=6`): 10^3, 10^4, 10^5 and 10^6 zeros took 0.05 s, 0.53 s, 10.6 s and 256 s, with time / T^1.5 roughly constant (about 5 x 10^-7), so the cost grows like T^(3/2). The 10^6 run was proven; the CSV had 1,000,000 consecutive rows with the last at t = 600269.677012. A first version with a fixed 0.01 scan reported NOT proven at this size because it missed a close pair of zeros near t = 273193.66 (gap 0.0057); the rescan fixes that.
 
 ## Method
 
@@ -92,14 +96,18 @@ So zero locations are good to roughly 4–6 decimal places, not 8. This is the c
 | `src/turing.hpp`           | Turing's method:`proveSpan`, `proveCompleteSpan` and helpers               |
 | `src/csv_export.hpp`       | `writeZerosCSV`                                                              |
 | `src/main.cpp`             | command-line program                                                           |
-| `src/tests.cpp`            | sanity checks, printed next to their expected values (no assertions)           |
+| `src/verify/tests.cpp`     | sanity checks, printed next to their expected values (no assertions)           |
+| `src/verify/counts.cpp`    | zero counts in `data/zeros.csv` against Riemann-von Mangoldt                   |
+| `src/verify/errors.cpp`    | writes `data/term_errors.csv`: Z(t) with 1, 2 and 3 correction terms           |
+| `plot/term_errors.py`      | compares that CSV with `mpmath.siegelz` and fits the error slopes              |
+| `src/verify/timing.sh`     | times `./build/main` for 10^3 .. 10^P zeros from outside, and checks time / T^1.5 |
 | `data/`                    | generated CSV output                                                           |
 
 ## Status
 
-Done: the Riemann–Siegel evaluation with C₀–C₂, zero finding, Gram blocks and Turing's method.
+Done: the Riemann–Siegel evaluation with C₀–C₂, zero finding, Gram blocks and Turing's method, and the verification suite (`make results`: first-10-zero errors, counts against Riemann–von Mangoldt, error against number of correction terms, timing).
 
-Not done: verification against Riemann–von Mangoldt counts and timing tables, plots (`plot/` is empty), a short LaTeX note, and a fresh-clone build check.
+Not done: plots, a short LaTeX note, and a fresh-clone build check.
 
 ## References
 
