@@ -131,5 +131,24 @@ int main() {
     std::printf("  nextGoodIndex(367): %d (expected 368)\n", nextGoodIndex(367));
     std::printf("  nextGoodIndex(300): %d (expected 300)\n", nextGoodIndex(300));
 
+    // findSignChanges must not sample past tMax: a bracket straddling the end of a
+    // range would be counted again by the next block's scan.
+    std::printf("\nfindSignChanges end clamp:\n");
+    auto clamped = findSignChanges(10.0, 55.0, 0.1);
+    std::printf("  last bracket upper end: %.4f (expected <= 55.0000)\n", clamped.back().second);
+
+    // scanBlock: a block holds nEnd - nStart zeros, and a pair closer than the step gives
+    // no sign change. Block n=420889..420891 holds a pair 0.0057 apart (t ~ 273193.66),
+    // missed at step 0.01 and found after one refinement. A failed call must leave `out` unchanged.
+    std::printf("\nscanBlock:\n");
+    std::vector<std::pair<double, double>> scanned;
+    std::printf("  n=420889..420891 maxLevels=0: %d (expected 0), out size %zu (expected 0)\n",
+                scanBlock(420889, 420891, 0.01, 0, scanned), scanned.size());
+    std::printf("  n=420889..420891 maxLevels=4: %d (expected 1), out size %zu (expected 2)\n",
+                scanBlock(420889, 420891, 0.01, 4, scanned), scanned.size());
+    std::vector<std::pair<double, double>> ordinary;
+    std::printf("  n=300..301 maxLevels=4: %d (expected 1), out size %zu (expected 1)\n",
+                scanBlock(300, 301, 0.01, 4, ordinary), ordinary.size());
+
     return 0;
 }
